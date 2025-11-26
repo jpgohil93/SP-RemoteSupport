@@ -14,16 +14,34 @@ function App() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
+    // Check login status on mount
+    useEffect(() => {
+        const loggedIn = localStorage.getItem('isLoggedIn');
+        if (loggedIn === 'true') {
+            setView('devices');
+            fetchDevices();
+        }
+    }, []);
+
     // Login (Static Check)
     const handleLogin = (e) => {
         e.preventDefault();
         if (email === 'screenpulse.ai@gmail.com' && password === 'Tjcg@#2050') {
+            localStorage.setItem('isLoggedIn', 'true');
             setView('devices');
             fetchDevices();
             setError('');
         } else {
             setError('Invalid credentials');
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('isLoggedIn');
+        setView('login');
+        setSocket(null);
+        setEmail('');
+        setPassword('');
     };
 
     // Fetch Devices
@@ -119,11 +137,14 @@ function App() {
 
             {view === 'devices' && (
                 <div className="device-list">
-                    <h2>Online Devices</h2>
-                    <button onClick={fetchDevices}>Refresh</button>
-                    <ul>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                        <h2>Online Devices</h2>
+                        <button onClick={handleLogout} style={{background: '#ff4444', padding: '8px 16px', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer'}}>Logout</button>
+                    </div>
+                    <button onClick={fetchDevices} style={{marginBottom: '10px'}}>Refresh List</button>
+                    <ul style={{listStyle: 'none', padding: 0}}>
                         {devices.map(d => (
-                            <li key={d.deviceId}>
+                            <li key={d.deviceId} style={{background: '#f5f5f5', padding: '10px', marginBottom: '8px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'black'}}>
                                 <span>{d.name || d.deviceId}</span>
                                 <button onClick={() => connectToDevice(d)}>Connect</button>
                             </li>
@@ -134,7 +155,7 @@ function App() {
 
             {view === 'session' && selectedDevice && (
                 <div className="session-view">
-                    <div className="header">
+                    <div className="header" style={{display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px'}}>
                         <button onClick={() => {
                             socket?.close();
                             setView('devices');
